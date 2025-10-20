@@ -50,11 +50,11 @@ void loop() {
   if (umidadeSolo < limiteBaixo) {
     // baixa
     digitalWrite(LED_AMARELO, HIGH);
-    valvula.write(90); // abre válvula (simulação)
+    valvula.write(0); // fecha válvula
   } else if (umidadeSolo > limiteAlto) {
     // alta
     digitalWrite(LED_VERMELHO, HIGH);
-    valvula.write(0); // fecha válvula
+    valvula.write(90); // abre válvula (simulação)
     // ciclo de alerta a cada 2 min
     unsigned long agora = millis();
     if (agora - ultimoCicloAlerta >= intervaloCiclo) {
