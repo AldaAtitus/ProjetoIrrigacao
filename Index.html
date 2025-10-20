@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <title>Irrigação Inteligente</title>
+  <script src="https://cdn.pubnub.com/sdk/javascript/pubnub.7.2.0.min.js"></script>
+  <style>
+    body { font-family: sans-serif; max-width: 700px; margin: 2rem auto; }
+    .card { border: 1px solid #ddd; padding: 1rem; margin-bottom: 1rem; border-radius: 8px; }
+    label { display:block; margin-top: .5rem; }
+    input { padding:.4rem; width: 120px; }
+    button { margin-top: .7rem; padding: .5rem .9rem; }
+  </style>
+</head>
+<body>
+  <h1>Monitor de Irrigação</h1>
+
+  <div class="card">
+    <h2>Tempo real</h2>
+    <div id="umidade">Aguardando dados...</div>
+  </div>
+
+  <div class="card">
+    <h2>Histórico</h2>
+    <ul id="hist"></ul>
+    <button onclick="carregarHistorico()">Atualizar histórico</button>
+  </div>
+
+  <div class="card">
+    <h2>Configurações</h2>
+    <label>Umidade alvo (ADC): <input id="umidadeAlvo" type="number" value="600" /></label>
+    <label>Intervalo de checagem (s): <input id="intervalo" type="number" value="2" /></label>
+    <button onclick="salvarConfig()">Salvar</button>
+    <div id="configStatus"></div>
+  </div>
+
+  <script>
+    const pubnub = new PubNub({
+      publishKey: "pub-c-XXXX",
+      subscribeKey: "sub-c-XXXX"
+    });
+    pubnub.subscribe({ channels: ["irrigacao"] });
+    pubnub.addListener({
+      message: function(event) {
+        document.getElementById("umidade").innerText =
+          "Umidade atual: " + event.message.umidade;
+      }
+    });
+
+    async function carregarHistorico() {
+      const r = await fetch("/api/historico");
+      const data = await r.json();
+      const ul = document.getElementById("hist");
+      ul.innerHTML = "";
+      data.forEach(item => {
+        const li = document.createElement("li");
+        li.textContent = `#${item.id} | ${item.valor} | ${item.data}`;
+        ul.appendChild(li);
+      });
+    }
+    async function salvarConfig() {
+      const alvo = parseInt(document.getElementById("umidadeAlvo").value);
+      const intervalo = parseInt(document.getElementById("intervalo").value);
+      const r = await fetch("/api/config", {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({ umidade_alvo: alvo, intervalo: intervalo })
+      });
+      const data = await r.json();
+      document.getElementById("configStatus").innerText = "Configurações salvas.";
+    }
+    // carregar inicial
+    carregarHistorico();
+  </script>
+</body>
+</html>
