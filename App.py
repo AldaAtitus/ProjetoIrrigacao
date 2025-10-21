@@ -1,10 +1,12 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import sqlite3
 from datetime import datetime
 from pubnub.pnconfiguration import PNConfiguration
 from pubnub.pubnub import PubNub
 
 app = Flask(__name__)
+CORS(app)
 
 # PubNub
 pnconfig = PNConfiguration()
