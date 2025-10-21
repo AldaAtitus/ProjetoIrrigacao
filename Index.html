@@ -37,7 +37,8 @@
   <script>
     const pubnub = new PubNub({
       publishKey: "pub-c-57a69d7b-e91e-4a3b-93ae-510b501b5535",
-      subscribeKey: "sub-c-1e92505a-640c-4ca9-9af1-662633b2f61d"
+      subscribeKey: "sub-c-1e92505a-640c-4ca9-9af1-662633b2f61d",
+      userId: userId
     });
     pubnub.subscribe({ channels: ["irrigacao"] });
     pubnub.addListener({
