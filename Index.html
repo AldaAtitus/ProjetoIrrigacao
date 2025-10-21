@@ -36,8 +36,8 @@
 
   <script>
     const pubnub = new PubNub({
-      publishKey: "pub-c-XXXX",
-      subscribeKey: "sub-c-XXXX"
+      publishKey: "pub-c-57a69d7b-e91e-4a3b-93ae-510b501b5535",
+      subscribeKey: "sub-c-1e92505a-640c-4ca9-9af1-662633b2f61d"
     });
     pubnub.subscribe({ channels: ["irrigacao"] });
     pubnub.addListener({
@@ -48,7 +48,7 @@
     });
 
     async function carregarHistorico() {
-      const r = await fetch("/api/historico");
+      const r = await fetch("http://localhost:5000/api/historico");
       const data = await r.json();
       const ul = document.getElementById("hist");
       ul.innerHTML = "";
