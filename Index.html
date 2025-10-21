@@ -61,7 +61,7 @@
     async function salvarConfig() {
       const alvo = parseInt(document.getElementById("umidadeAlvo").value);
       const intervalo = parseInt(document.getElementById("intervalo").value);
-      const r = await fetch("/api/config", {
+      const r = await fetch("http://localhost:5000/api/config", {
         method: "POST",
         headers: {"Content-Type":"application/json"},
         body: JSON.stringify({ umidade_alvo: alvo, intervalo: intervalo })
