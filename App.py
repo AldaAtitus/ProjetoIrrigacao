@@ -5,7 +5,7 @@ from datetime import datetime
 from pubnub.pnconfiguration import PNConfiguration
 from pubnub.pubnub import PubNub
 
-app = Flask(_name_)
+app = Flask(__name__)
 CORS(app)
 
 # PubNub
@@ -80,5 +80,5 @@ def config():
     umidade_alvo, intervalo = rows[0]
     return jsonify({"umidade_alvo": umidade_alvo, "intervalo": intervalo})
 
-if _name_ == "_main_":
+if __name__ == "__main__":
   app.run(host="0.0.0.0", port=5000, debug=True)
