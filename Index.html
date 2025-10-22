@@ -55,7 +55,7 @@
       ul.innerHTML = "";
       data.forEach(item => {
         const li = document.createElement("li");
-        li.textContent = #${item.id} | ${item.valor} | ${item.data};
+        li.textContent = `#${item.id} | ${item.valor} | ${item.data}`;
         ul.appendChild(li);
       });
     }
