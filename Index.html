@@ -38,7 +38,7 @@
     const pubnub = new PubNub({
       publishKey: "pub-c-57a69d7b-e91e-4a3b-93ae-510b501b5535",
       subscribeKey: "sub-c-1e92505a-640c-4ca9-9af1-662633b2f61d",
-      userId: userId
+      userId: "monitor-web-app" // 2. Use a variável declarada
     });
     pubnub.subscribe({ channels: ["irrigacao"] });
     pubnub.addListener({
@@ -55,10 +55,11 @@
       ul.innerHTML = "";
       data.forEach(item => {
         const li = document.createElement("li");
-        li.textContent = `#${item.id} | ${item.valor} | ${item.data}`;
+        li.textContent = #${item.id} | ${item.valor} | ${item.data};
         ul.appendChild(li);
       });
     }
+
     async function salvarConfig() {
       const alvo = parseInt(document.getElementById("umidadeAlvo").value);
       const intervalo = parseInt(document.getElementById("intervalo").value);
@@ -70,6 +71,7 @@
       const data = await r.json();
       document.getElementById("configStatus").innerText = "Configurações salvas.";
     }
+
     // carregar inicial
     carregarHistorico();
   </script>
