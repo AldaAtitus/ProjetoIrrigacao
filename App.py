@@ -5,13 +5,14 @@ from datetime import datetime
 from pubnub.pnconfiguration import PNConfiguration
 from pubnub.pubnub import PubNub
 
-app = Flask(__name__)
+app = Flask(_name_)
 CORS(app)
 
 # PubNub
 pnconfig = PNConfiguration()
-pnconfig.subscribe_key = "sub-c-XXXX"
-pnconfig.publish_key = "pub-c-XXXX"
+pnconfig.subscribe_key = "sub-c-1e92505a-640c-4ca9-9af1-662633b2f61d"
+pnconfig.publish_key = "pub-c-57a69d7b-e91e-4a3b-93ae-510b501b5535"
+pnconfig.uuid = "rasp-irrigacao"
 pubnub = PubNub(pnconfig)
 CANAL = "irrigacao"
 
@@ -48,6 +49,9 @@ def db_query(query, params=(), fetch=False):
     return rows
   conn.commit()
   conn.close()
+@app.route("/")
+def home():
+  return "<h1>Sistema de Irrigação Inteligente<h1><p>Use /api/historico ou /api/config</p>"
 
 @app.route("/api/umidade", methods=["POST"])
 def receber_umidade():
@@ -76,5 +80,5 @@ def config():
     umidade_alvo, intervalo = rows[0]
     return jsonify({"umidade_alvo": umidade_alvo, "intervalo": intervalo})
 
-if __name__ == "__main__":
+if _name_ == "_main_":
   app.run(host="0.0.0.0", port=5000, debug=True)
