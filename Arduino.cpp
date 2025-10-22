@@ -10,10 +10,11 @@
 Servo valvula;
 
 int umidadeSolo = 0;
-int limiteBaixo = 400;   // ajuste por calibração
-int limiteAlto = 700;    // ajuste por calibração
+int limiteBaixo = 400;   // valor inicial (pode ser atualizado via serial)
+int limiteAlto = 700;    // valor inicial (pode ser atualizado via serial)
+int intervalo = 2;       // segundos, atualizado via serial
 
-unsigned long ultimoCicloAlerta = 0; // para 2 min entre ciclos
+unsigned long ultimoCicloAlerta = 0;
 const unsigned long intervaloCiclo = 120000; // 2 min
 
 void setup() {
@@ -27,7 +28,6 @@ void setup() {
 }
 
 void acionarBuzzerCiclo() {
-  // 3 vezes por 5s, com 2s entre cada beep
   for (int i = 0; i < 3; i++) {
     digitalWrite(BUZZER, HIGH);
     delay(5000);
@@ -37,35 +37,46 @@ void acionarBuzzerCiclo() {
 }
 
 void loop() {
+  // --- Lê comandos vindos da Raspberry ---
+  if (Serial.available()) {
+    String comando = Serial.readStringUntil('\n');
+    comando.trim();
+
+    if (comando.startsWith("ALVO:")) {
+      limiteAlto = comando.substring(5).toInt();
+      Serial.print("Novo limiteAlto: ");
+      Serial.println(limiteAlto);
+    } else if (comando.startsWith("INTERVALO:")) {
+      intervalo = comando.substring(10).toInt();
+      Serial.print("Novo intervalo: ");
+      Serial.println(intervalo);
+    }
+  }
+
+  // --- Lê sensor ---
   umidadeSolo = analogRead(SENSOR_PIN);
+  Serial.println(umidadeSolo); // envia leitura para Raspberry
 
-  // envia leitura para Raspberry
-  Serial.println(umidadeSolo);
-
-  // reset LEDs
+  // --- LEDs e válvula ---
   digitalWrite(LED_VERDE, LOW);
   digitalWrite(LED_AMARELO, LOW);
   digitalWrite(LED_VERMELHO, LOW);
 
   if (umidadeSolo < limiteBaixo) {
-    // baixa
     digitalWrite(LED_AMARELO, HIGH);
     valvula.write(0); // fecha válvula
   } else if (umidadeSolo > limiteAlto) {
-    // alta
     digitalWrite(LED_VERMELHO, HIGH);
-    valvula.write(90); // abre válvula (simulação)
-    // ciclo de alerta a cada 2 min
+    valvula.write(90); // abre válvula
     unsigned long agora = millis();
     if (agora - ultimoCicloAlerta >= intervaloCiclo) {
       acionarBuzzerCiclo();
       ultimoCicloAlerta = agora;
     }
   } else {
-    // ideal
     digitalWrite(LED_VERDE, HIGH);
     valvula.write(0); // ideal, fecha válvula
   }
 
-  delay(500); // leitura responsiva; o intervalo real virá da RPi
+  delay(intervalo * 1000); // intervalo controlado pela Raspberry
 }
