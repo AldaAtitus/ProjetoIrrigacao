@@ -38,38 +38,60 @@
     const pubnub = new PubNub({
       publishKey: "pub-c-57a69d7b-e91e-4a3b-93ae-510b501b5535",
       subscribeKey: "sub-c-1e92505a-640c-4ca9-9af1-662633b2f61d",
-      userId: "monitor-web-app" // 2. Use a variável declarada
+      uuid: "monitor-web-app"
     });
     pubnub.subscribe({ channels: ["irrigacao"] });
     pubnub.addListener({
       message: function(event) {
-        document.getElementById("umidade").innerText =
-          "Umidade atual: " + event.message.umidade;
+        try {
+          const m = event && event.message;
+          if (!m || typeof m.umidade === 'undefined') {
+            console.warn('Mensagem PubNub sem campo umidade', event);
+            return;
+          }
+          document.getElementById("umidade").innerText =
+            "Umidade atual: " + m.umidade;
+        } catch (err) {
+          console.error('Erro ao processar mensagem PubNub', err);
+        }
       }
     });
 
     async function carregarHistorico() {
-      const r = await fetch("http://localhost:5000/api/historico");
-      const data = await r.json();
-      const ul = document.getElementById("hist");
-      ul.innerHTML = "";
-      data.forEach(item => {
-        const li = document.createElement("li");
-        li.textContent = `#${item.id} | ${item.valor} | ${item.data}`;
-        ul.appendChild(li);
-      });
+      try {
+        const r = await fetch("http://localhost:5000/api/historico");
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const data = await r.json();
+        const ul = document.getElementById("hist");
+        ul.innerHTML = "";
+        data.forEach(item => {
+          const li = document.createElement("li");
+          li.textContent = `#${item.id} | ${item.valor} | ${item.data}`;
+          ul.appendChild(li);
+        });
+      } catch (err) {
+        console.error('Falha ao carregar histórico', err);
+        document.getElementById('hist').innerHTML = '<li>Erro ao carregar histórico</li>';
+      }
     }
 
     async function salvarConfig() {
       const alvo = parseInt(document.getElementById("umidadeAlvo").value);
       const intervalo = parseInt(document.getElementById("intervalo").value);
-      const r = await fetch("http://localhost:5000/api/config", {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({ umidade_alvo: alvo, intervalo: intervalo })
-      });
-      const data = await r.json();
-      document.getElementById("configStatus").innerText = "Configurações salvas.";
+      try {
+        document.getElementById("configStatus").innerText = "Salvando...";
+        const r = await fetch("http://localhost:5000/api/config", {
+          method: "POST",
+          headers: {"Content-Type":"application/json"},
+          body: JSON.stringify({ umidade_alvo: alvo, intervalo: intervalo })
+        });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const data = await r.json();
+        document.getElementById("configStatus").innerText = "Configurações salvas.";
+      } catch (err) {
+        console.error('Erro ao salvar config', err);
+        document.getElementById("configStatus").innerText = "Erro ao salvar configurações.";
+      }
     }
 
     // carregar inicial
