@@ -45,7 +45,7 @@
     const pubnub = new PubNub({
       publishKey: "pub-c-57a69d7b-e91e-4a3b-93ae-510b501b5535",
       subscribeKey: "sub-c-1e92505a-640c-4ca9-9af1-662633b2f61d",
-      uuid: "monitor-web-app"
+      uuid: "rasp-irrigacao"
     });
 
     pubnub.subscribe({ channels: ["irrigacao"] });
@@ -67,9 +67,9 @@
       status.textContent = "Carregando...";
       try {
         // Quando servido pelo Flask, use caminho relativo:
-        const r = await fetch("/api/historico");
+        const r = await fetch("http://192.168.103.155:5000/api/historico");;
         // Se abrir o HTML direto no navegador, use o IP da Raspberry:
-        // const r = await fetch("http://10.1.25.105:5000/api/historico");
+        // const r = await fetch("http://192.168.103.155:5000/api/historico");
 
         if (!r.ok) throw new Error("HTTP " + r.status);
         const data = await r.json();
@@ -101,13 +101,13 @@
       status.textContent = "Salvando...";
       try {
         // Quando servido pelo Flask, use caminho relativo:
-        const r = await fetch("/api/config", {
+        const r = await fetch("http://127.0.0.1:5000/api/config", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ umidade_alvo: alvo, intervalo: intervalo })
         });
         // Se abrir o HTML direto no navegador, use o IP da Raspberry:
-        // const r = await fetch("http://10.1.25.105:5000/api/config", { ... });
+        // const r = await fetch("http://192.168.103.155/api/config", { ... });
 
         if (!r.ok) throw new Error("HTTP " + r.status);
         await r.json();
