@@ -7,7 +7,7 @@ ARDUINO_PORT = "/dev/ttyACM0"  # ou /dev/ttyUSB0 dependendo do Arduino
 BAUD = 9600
 
 # Endpoints do backend Flask (ajuste IP se rodar em outra máquina)
-BACKEND_BASE = "http://192.168.103.155:5000"
+BACKEND_BASE = "http://127.0.0.1:5000"
 UMIDADE_ENDPOINT = f"{BACKEND_BASE}/api/umidade"
 CONFIG_ENDPOINT = f"{BACKEND_BASE}/api/config"
 
