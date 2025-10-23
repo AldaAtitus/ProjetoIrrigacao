@@ -41,11 +41,15 @@
   </div>
 
   <script>
+    const baseURL = window.location.protocol === "file:" 
+      ? "http://192.168.103.155:5000" 
+      : "";
+
     // PubNub tempo real
     const pubnub = new PubNub({
       publishKey: "pub-c-57a69d7b-e91e-4a3b-93ae-510b501b5535",
       subscribeKey: "sub-c-1e92505a-640c-4ca9-9af1-662633b2f61d",
-      uuid: "rasp-irrigacao"
+      uuid: "monitor-web-app"
     });
 
     pubnub.subscribe({ channels: ["irrigacao"] });
@@ -66,11 +70,7 @@
       const status = document.getElementById("histStatus");
       status.textContent = "Carregando...";
       try {
-        // Quando servido pelo Flask, use caminho relativo:
-        const r = await fetch("http://192.168.103.155:5000/api/historico");;
-        // Se abrir o HTML direto no navegador, use o IP da Raspberry:
-        // const r = await fetch("http://192.168.103.155:5000/api/historico");
-
+        const r = await fetch(`${baseURL}/api/historico`);
         if (!r.ok) throw new Error("HTTP " + r.status);
         const data = await r.json();
         const ul = document.getElementById("hist");
@@ -87,6 +87,22 @@
       }
     }
 
+    // Carregar configurações salvas
+    async function carregarConfig() {
+      const status = document.getElementById("configStatus");
+      try {
+        const r = await fetch(`${baseURL}/api/config`);
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        const data = await r.json();
+        document.getElementById("umidadeAlvo").value = data.umidade_alvo;
+        document.getElementById("intervalo").value = data.intervalo;
+        status.textContent = "Configurações carregadas.";
+      } catch (err) {
+        console.error("Erro ao carregar configurações", err);
+        status.textContent = "Erro ao carregar configurações.";
+      }
+    }
+
     // Salvar configurações
     async function salvarConfig() {
       const alvo = parseInt(document.getElementById("umidadeAlvo").value);
@@ -100,15 +116,11 @@
 
       status.textContent = "Salvando...";
       try {
-        // Quando servido pelo Flask, use caminho relativo:
-        const r = await fetch("http://127.0.0.1:5000/api/config", {
+        const r = await fetch(`${baseURL}/api/config`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ umidade_alvo: alvo, intervalo: intervalo })
         });
-        // Se abrir o HTML direto no navegador, use o IP da Raspberry:
-        // const r = await fetch("http://192.168.103.155/api/config", { ... });
-
         if (!r.ok) throw new Error("HTTP " + r.status);
         await r.json();
         status.textContent = "Configurações salvas.";
@@ -118,8 +130,9 @@
       }
     }
 
-    // Carregar histórico ao abrir
+    // Ao carregar a página
     carregarHistorico();
+    carregarConfig();
   </script>
 </body>
 </html>
