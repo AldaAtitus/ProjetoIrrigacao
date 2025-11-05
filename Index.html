@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <title>Irrigação Inteligente</title>
+  <script src="https://cdn.pubnub.com/sdk/javascript/pubnub.7.2.0.min.js"></script>
+  <style>
+    body { font-family: sans-serif; max-width: 700px; margin: 2rem auto; }
+    .card { border: 1px solid #ddd; padding: 1rem; margin-bottom: 1rem; border-radius: 8px; }
+    label { display:block; margin-top: .5rem; }
+    input { padding:.4rem; width: 160px; }
+    button { margin-top: .7rem; padding: .5rem .9rem; cursor: pointer; }
+    .status { margin-top: .5rem; font-size: .95rem; color: #444; }
+  </style>
+</head>
+<body>
+  <h1>Monitor de Irrigação</h1>
+
+  <div class="card">
+    <h2>Tempo real</h2>
+    <div id="umidade">Aguardando dados...</div>
+  </div>
+
+  <div class="card">
+    <h2>Histórico</h2>
+    <ul id="hist"></ul>
+    <button onclick="carregarHistorico()">Atualizar histórico</button>
+    <div id="histStatus" class="status"></div>
+  </div>
+
+  <div class="card">
+    <h2>Configurações</h2>
+    <label>Umidade alvo (ADC):
+      <input id="umidadeAlvo" type="number" value="600" />
+    </label>
+    <label>Intervalo de checagem (s):
+      <input id="intervalo" type="number" value="2" />
+    </label>
+    <button onclick="salvarConfig()">Salvar</button>
+    <div id="configStatus" class="status"></div>
+  </div>
+
+  <script>
+    const baseURL = window.location.protocol === "file:" 
+      ? "http://192.168.103.155:5000" 
+      : "";
+
+    // PubNub tempo real
+    const pubnub = new PubNub({
+      publishKey: "pub-c-57a69d7b-e91e-4a3b-93ae-510b501b5535",
+      subscribeKey: "sub-c-1e92505a-640c-4ca9-9af1-662633b2f61d",
+      uuid: "monitor-web-app"
+    });
+
+    pubnub.subscribe({ channels: ["irrigacao"] });
+    pubnub.addListener({
+      message: function(event) {
+        try {
+          const m = event && event.message;
+          if (!m || typeof m.umidade === "undefined") return;
+          document.getElementById("umidade").innerText = "Umidade atual: " + m.umidade;
+        } catch (err) {
+          console.error("Erro ao processar mensagem PubNub", err);
+        }
+      }
+    });
+
+    // Carregar histórico
+    async function carregarHistorico() {
+      const status = document.getElementById("histStatus");
+      status.textContent = "Carregando...";
+      try {
+        const r = await fetch(`${baseURL}/api/historico`);
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        const data = await r.json();
+        const ul = document.getElementById("hist");
+        ul.innerHTML = "";
+        data.forEach(item => {
+          const li = document.createElement("li");
+          li.textContent = `#${item.id} | ${item.valor} | ${item.data}`;
+          ul.appendChild(li);
+        });
+        status.textContent = `Carregado (${data.length} registros).`;
+      } catch (err) {
+        console.error("Falha ao carregar histórico", err);
+        status.textContent = "Erro ao carregar histórico.";
+      }
+    }
+
+    // Carregar configurações salvas
+    async function carregarConfig() {
+      const status = document.getElementById("configStatus");
+      try {
+        const r = await fetch(`${baseURL}/api/config`);
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        const data = await r.json();
+        document.getElementById("umidadeAlvo").value = data.umidade_alvo;
+        document.getElementById("intervalo").value = data.intervalo;
+        status.textContent = "Configurações carregadas.";
+      } catch (err) {
+        console.error("Erro ao carregar configurações", err);
+        status.textContent = "Erro ao carregar configurações.";
+      }
+    }
+
+    // Salvar configurações
+    async function salvarConfig() {
+      const alvo = parseInt(document.getElementById("umidadeAlvo").value);
+      const intervalo = parseInt(document.getElementById("intervalo").value);
+      const status = document.getElementById("configStatus");
+
+      if (Number.isNaN(alvo) || Number.isNaN(intervalo)) {
+        status.textContent = "Preencha valores válidos.";
+        return;
+      }
+
+      status.textContent = "Salvando...";
+      try {
+        const r = await fetch(`${baseURL}/api/config`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ umidade_alvo: alvo, intervalo: intervalo })
+        });
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        await r.json();
+        status.textContent = "Configurações salvas.";
+      } catch (err) {
+        console.error("Erro ao salvar config", err);
+        status.textContent = "Erro ao salvar configurações.";
+      }
+    }
+
+    // Ao carregar a página
+    carregarHistorico();
+    carregarConfig();
+  </script>
+</body>
+</html>
