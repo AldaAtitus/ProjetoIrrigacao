@@ -61,21 +61,26 @@ void loop() {
   digitalWrite(LED_VERDE, LOW);
   digitalWrite(LED_AMARELO, LOW);
   digitalWrite(LED_VERMELHO, LOW);
+  digitalWrite(BUZZER, LOW);
 
-  if (umidadeSolo < limiteBaixo) {
+  if (umidadeSolo > limiteAlto) {
+    // SOLO SECO → LED vermelho + buzzer + irrigação
+    digitalWrite(LED_VERMELHO, HIGH);
+    digitalWrite(BUZZER, HIGH);
+    unsigned long agora = millis();
+  if (agora - ultimoCicloAlerta >= intervaloCiclo) {
+    acionarBuzzerCiclo();   // buzzer toca em ciclos
+    ultimoCicloAlerta = agora; // atualiza o tempo da última execução
+  }
+    valvula.write(90); // abre válvula
+  } else if (umidadeSolo < limiteBaixo) {
+    // SOLO ENCHARCADO → LED amarelo, irrigação desligada
     digitalWrite(LED_AMARELO, HIGH);
     valvula.write(0); // fecha válvula
-  } else if (umidadeSolo > limiteAlto) {
-    digitalWrite(LED_VERMELHO, HIGH);
-    valvula.write(90); // abre válvula
-    unsigned long agora = millis();
-    if (agora - ultimoCicloAlerta >= intervaloCiclo) {
-      acionarBuzzerCiclo();
-      ultimoCicloAlerta = agora;
-    }
   } else {
+    // SOLO IDEAL → LED verde, irrigação desligada
     digitalWrite(LED_VERDE, HIGH);
-    valvula.write(0); // ideal, fecha válvula
+    valvula.write(0); // fecha válvula
   }
 
   delay(intervalo * 1000); // intervalo controlado pela Raspberry
