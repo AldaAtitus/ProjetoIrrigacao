@@ -55,7 +55,7 @@ def db_query(query, params=(), fetch=False):
 # Servir o frontend
 @app.route("/")
 def index():
-    return send_from_directory(".", "index.html")
+    return send_from_directory(".", "Index.html")
 
 @app.route("/api/umidade", methods=["POST"])
 def receber_umidade():
