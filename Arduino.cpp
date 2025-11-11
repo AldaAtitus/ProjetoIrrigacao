@@ -66,6 +66,7 @@ void loop() {
   if (umidadeSolo > limiteAlto) {
     // SOLO SECO → LED vermelho + buzzer + irrigação
     digitalWrite(LED_VERMELHO, HIGH);
+    delay(5000);
     digitalWrite(BUZZER, HIGH);
     unsigned long agora = millis();
   if (agora - ultimoCicloAlerta >= intervaloCiclo) {
